@@ -1,0 +1,39 @@
+<%- | String $success_color, String $error_color, Hash $validation_data | -%>
+#!/bin/bash
+
+# variables passed in via PROFILE_PACKAGES
+console_success="<%= $success_color %>"
+console_error="<%= $error_color %>"
+
+# loop throuh Hiera packages and see if they are installed locally
+<% $hiera_packages = keys($validation_data)
+$hiera_packages.each |String $package_name| { -%>
+
+# use 'facter' output to determine package name and version
+facterPackageName=`/usr/local/bin/puppet resource package <%= $package_name %> | grep -oP "(?<=\').*(?=\':)"`
+facterPackageVersion=`/usr/local/bin/puppet resource package <%= $package_name %> | grep -oP "(?<=\').*(?='\,)"`
+
+# check if hiera package found
+if [ <%= $package_name %> ==  $facterPackageName ]
+then
+  # package found, if just making sure 'present', then this is a success.
+  # no version to validate.
+  if [ <%= $validation_data[$package_name][ensure] %> == 'present' ]
+  then
+    echo -e "$console_success PASS: PROFILE_PACKAGES <%= $package_name %> is present on the system \e[0m"
+  #package found. But we specified a version, let's see if we have version match
+  elif [ <%= $validation_data[$package_name][ensure] %> == $facterPackageVersion ]
+  then
+    echo -e "$console_success PASS: PROFILE_PACKAGES <%= $package_name %> Version = $facterPackageVersion  \e[0m"
+  # pacakge found but version mismatch
+  else
+    echo -e "$console_error FAIL: PROFILE_PACKAGES <%= $package_name %>
+    version <%= $validation_data[$package_name][ensure] %> does not match $facterPackageVersion !!! \e[0m"
+  fi
+else
+  # packakge not found.
+  echo -e "$console_error FAIL: PROFILE_PACKAGES <%= $package_name %> not found!!!! \e[0m"
+fi
+
+# end of loop
+<% } -%>
