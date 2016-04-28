@@ -128,7 +128,7 @@ class profile_packages {
 
   ##################### VALIDATION CODE  ##########################
   validation_script { 'profile_packages':
-    profile_name    => 'packages',
+    profile_name    => 'profile_packages',
     validation_data => merge($osfamily_packages, $hardware_packages),
   }
 
