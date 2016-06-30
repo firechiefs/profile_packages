@@ -95,6 +95,9 @@ class profile_packages {
       # }
     }
     'windows': {
+      # package installs require chocolotey class
+      require profile_chocolatey
+
       # windows doesn't require major release specific packages
       # that logic is handled by chocolatey
       # safe to base it on $::osfamily
